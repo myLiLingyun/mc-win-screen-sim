@@ -2,27 +2,22 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Extract the assets needed by this player from a Minecraft 26.2 jar.
 
-The jar supplies the English text, fonts, shaders and textures. Modern
-Minecraft installations keep Unifont and the credits music in the external
-asset-object store; when --minecraft-dir is available, the matching index is
-used to copy those files too.
+The jar supplies the English text, fonts, shaders and textures. It does not
+contain Unifont zip or the credits music; use find_minecraft_assets.py for
+those external objects.
 
 Usage:
     python3 tools/extract_minecraft_assets.py 26.2-Fabric.jar
     python3 tools/extract_minecraft_assets.py 26.2-Fabric.jar --out assets
-    python3 tools/extract_minecraft_assets.py 26.2-Fabric.jar \\
-        --minecraft-dir ~/.minecraft --index 32
 
-This tool extracts only the files the player uses. It does not extract the
-NetEase Chinese text: no NetEase jar/path assumption is made here. Supply a
-licensed end_poem_zh.txt yourself if you have one. Use
+This tool does not make any NetEase/Bedrock path assumption. Use
+import_end_text.py for a Bedrock/APK credits/end.txt, and
 fetch_wiki_translations.py for the four CC BY-NC-SA Classical Chinese texts.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import zipfile
 from pathlib import Path
 
@@ -51,14 +46,6 @@ JAR_FILES = {
 }
 SHADER_INCLUDE_PREFIX = "assets/minecraft/shaders/include/"
 SHADER_INCLUDE_DEST = "shaders/include"
-EXTERNAL_OBJECTS = {
-    "font/include/unifont.json": "minecraft/font/include/unifont.json",
-    "font/unifont.zip": "minecraft/font/unifont.zip",
-    "sounds/alpha.ogg": "minecraft/sounds/music/game/end/alpha.ogg",
-}
-OPTIONAL_EXTERNAL = {"font/include/unifont.json", "font/unifont.zip", "sounds/alpha.ogg"}
-UNIFONT_LICENSE = "font/UNIFONT-LICENSE.txt"
-
 
 def write_bytes(destination: Path, data: bytes) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -74,7 +61,14 @@ def extract_jar(jar: Path, out: Path) -> set[str]:
             if source not in names:
                 missing.add(destination)
                 continue
-            write_bytes(out / destination, zf.read(source))
+            target = out / destination
+            if destination == "font/include/unifont.json" and target.is_file() and target.stat().st_size > 0:
+                # The jar's copy is an empty provider list; keep a real Unifont
+                # index written by find_minecraft_assets.py even if the tools
+                # are run in the other order.
+                print(f"  keep existing {target}")
+                continue
+            write_bytes(target, zf.read(source))
 
         for source in sorted(names):
             if source.startswith(SHADER_INCLUDE_PREFIX) and source.endswith(".glsl"):
@@ -83,72 +77,11 @@ def extract_jar(jar: Path, out: Path) -> set[str]:
     return missing
 
 
-def locate_index(minecraft_dir: Path, wanted: str | None) -> Path | None:
-    if wanted:
-        candidate = Path(wanted)
-        if candidate.is_file():
-            return candidate
-        candidate = minecraft_dir / "assets" / "indexes" / f"{wanted}.json"
-        if candidate.is_file():
-            return candidate
-        raise SystemExit(f"asset index not found: {wanted}")
-
-    indexes = minecraft_dir / "assets" / "indexes"
-    if not indexes.is_dir():
-        return None
-    candidates = sorted(indexes.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
-    for candidate in candidates:
-        try:
-            data = json.loads(candidate.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        objects = data.get("objects", {})
-        if all(key in objects for key in EXTERNAL_OBJECTS.values()):
-            return candidate
-    return candidates[0] if candidates else None
-
-
-def extract_external(minecraft_dir: Path, index: Path, out: Path) -> set[str]:
-    data = json.loads(index.read_text(encoding="utf-8"))
-    objects = data.get("objects", {})
-    missing: set[str] = set()
-    print(f"external asset index: {index}")
-    for destination, key in EXTERNAL_OBJECTS.items():
-        entry = objects.get(key)
-        if not entry:
-            missing.add(destination)
-            continue
-        source = minecraft_dir / "assets" / "objects" / entry["hash"][:2] / entry["hash"]
-        if not source.is_file():
-            missing.add(destination)
-            continue
-        # Prefer the external unifont.json over the intentionally empty jar copy.
-        write_bytes(out / destination, source.read_bytes())
-
-    unifont = out / "font" / "unifont.zip"
-    if unifont.is_file():
-        try:
-            with zipfile.ZipFile(unifont) as zf:
-                for name in ("LICENSE.txt", "LICENSE"):
-                    if name in zf.namelist():
-                        write_bytes(out / UNIFONT_LICENSE, zf.read(name))
-                        break
-        except zipfile.BadZipFile:
-            print("  warning: unifont.zip is not a readable zip")
-
-    return missing
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("jar", type=Path, help="Minecraft client jar")
     parser.add_argument("--out", type=Path, default=Path("assets"),
                         help="destination asset directory (default: assets)")
-    parser.add_argument("--minecraft-dir", type=Path, default=Path.home() / ".minecraft",
-                        help="Minecraft directory for external objects (default: ~/.minecraft)")
-    parser.add_argument("--index", help="asset index name or path (default: auto)")
-    parser.add_argument("--no-external", action="store_true",
-                        help="do not look for Unifont/music in the asset-object store")
     args = parser.parse_args()
 
     if not args.jar.is_file():
@@ -159,23 +92,9 @@ def main() -> None:
     print(f"jar: {args.jar}")
     print(f"out: {args.out.resolve()}")
     missing = extract_jar(args.jar, args.out)
-
-    if not args.no_external:
-        index = locate_index(args.minecraft_dir, args.index)
-        if index is None:
-            print(f"warning: no asset index under {args.minecraft_dir / 'assets' / 'indexes'}")
-        else:
-            missing |= extract_external(args.minecraft_dir, index, args.out)
-
-    required_missing = sorted(m for m in missing if m not in OPTIONAL_EXTERNAL)
-    optional_missing = sorted(m for m in missing if m in OPTIONAL_EXTERNAL)
-    if optional_missing:
-        print("optional external assets unavailable (English still works):")
-        for name in optional_missing:
-            print(f"  {name}")
-    if required_missing:
+    if missing:
         print("missing required jar entries:")
-        for name in required_missing:
+        for name in sorted(missing):
             print(f"  {name}")
         raise SystemExit(1)
 

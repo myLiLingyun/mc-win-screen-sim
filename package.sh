@@ -6,6 +6,7 @@ rm -rf dist
 mkdir -p dist/docs
 cp EndPoem.jar dist/
 cp -r lib natives assets assets-placeholder tools dist/
+rm -rf dist/tools/__pycache__
 cp run.sh run.bat README.md NOTICE.md LICENSE LICENSE.CC-BY-NC-SA-4.0 THIRD-PARTY.md dist/
 chmod 755 dist/run.sh
 cp docs/*.png dist/docs/

@@ -89,21 +89,49 @@ The script itself is GPL-3.0-only.
 
 ## What the tools produce
 
+The work is split into four small tools:
+
 ```bash
-# English, fonts, shaders, textures, Unifont, credits music
+# 1. Everything stored inside the client jar
 python3 tools/extract_minecraft_assets.py /path/to/26.2.jar --out assets
 
-# Four Classical Chinese translations
+# 2. Unifont + credits music from Minecraft's external asset store
+python3 tools/find_minecraft_assets.py --out assets
+
+# 3. Chinese text from a Bedrock file or APK
+python3 tools/import_end_text.py Minecraft.apk --out assets --output end_poem_zh.txt
+
+# 4. Four Classical Chinese translations
 python3 tools/fetch_wiki_translations.py --out assets
 ```
 
-With the Minecraft jar plus the external asset-object store, the extractor
-produces every Minecraft file the player uses: English text, fonts, shaders,
-textures, Unifont and the credits music.
+`extract_minecraft_assets.py` takes only the jar and its output directory.
+`find_minecraft_assets.py` locates `assets/indexes` + `assets/objects`
+separately; the jar and the external store are deliberately not mixed in one
+tool.
 
-It does **not** produce `end_poem_zh.txt`. I do not have a NetEase jar or a
-verified NetEase layout, so this repository makes no NetEase extraction
-assumption; supply a licensed Chinese text file yourself if you have one.
+## Finding the Minecraft asset store
+
+`find_minecraft_assets.py` checks, in order:
+
+- `$MINECRAFT_DIR` (if set);
+- Windows: `%APPDATA%\.minecraft`, `%USERPROFILE%\AppData\Roaming\.minecraft`;
+- macOS: `~/Library/Application Support/minecraft`, `~/Library/Application Support/.minecraft`;
+- Linux: `~/.minecraft`, `~/.var/app/com.mojang.Minecraft/.minecraft`,
+  `~/snap/minecraft/common/.minecraft`.
+
+Use an explicit path for a custom launcher:
+
+```bash
+python3 tools/find_minecraft_assets.py \
+  --minecraft-dir "D:\Games\.minecraft" --out assets
+python3 tools/find_minecraft_assets.py \
+  --minecraft-dir "$HOME/Library/Application Support/minecraft" --out assets
+```
+
+`--list` shows detected roots and indexes; `--index 32` selects a specific
+index. It verifies the SHA-1 of every copied object and writes
+`font/UNIFONT-LICENSE.txt` from the Unifont zip.
 
 ## Importing Bedrock / APK `credits/end.txt`
 
