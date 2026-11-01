@@ -3,13 +3,13 @@ set -euo pipefail
 cd "$(dirname "$0")"
 ./build.sh
 rm -rf dist
-mkdir -p dist/docs
+mkdir -p dist
 cp EndPoem.jar dist/
 cp -r lib natives assets assets-placeholder tools dist/
 rm -rf dist/tools/__pycache__
-cp run.sh run.bat README.md NOTICE.md LICENSE LICENSE.CC-BY-NC-SA-4.0 THIRD-PARTY.md dist/
+cp run.sh run.bat NOTICE.md LICENSE LICENSE.CC-BY-NC-SA-4.0 THIRD-PARTY.md dist/
+find dist -name README.md -delete
 chmod 755 dist/run.sh
-cp docs/*.png dist/docs/
 rm -f EndPoem-26.2-dist.zip
 python3 - <<'PY'
 import pathlib, zipfile
