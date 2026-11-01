@@ -87,28 +87,23 @@ player. They are derived from 礦藝大典 and remain **CC BY-NC-SA 3.0**; do no
 commit them to this repository unless you are complying with that license.
 The script itself is GPL-3.0-only.
 
-## Full asset set from the two tools
-
-For a complete local asset tree, run both tools:
+## What the two tools produce
 
 ```bash
 # English, fonts, shaders, textures, Unifont, credits music
 python3 tools/extract_minecraft_assets.py /path/to/26.2.jar --out assets
 
-# Optional: the NetEase Chinese text, if you have a NetEase client jar
-python3 tools/extract_minecraft_assets.py /path/to/26.2.jar --out assets \
-  --zh-jar /path/to/NetEase.jar
-
 # Four Classical Chinese translations
 python3 tools/fetch_wiki_translations.py --out assets
 ```
 
-The only file not supplied by `26.2.jar` alone is `end_poem_zh.txt`; it comes
-from the optional NetEase jar. Unifont and the credits music normally live in
-Minecraft's external asset-object store; the extractor resolves them through
-`--minecraft-dir`/`--index`. If no NetEase jar is available, English and the
-four wiki translations still work; the Chinese checkbox simply stays hidden.
-Do not publish a tree containing Mojang/NetEase assets.
+With the Minecraft jar plus the external asset-object store, the extractor
+produces every Minecraft file the player uses: English text, fonts, shaders,
+textures, Unifont and the credits music.
+
+It does **not** produce `end_poem_zh.txt`. I do not have a NetEase jar or a
+verified NetEase layout, so this repository makes no NetEase extraction
+assumption; supply a licensed Chinese text file yourself if you have one.
 
 ## Build
 
