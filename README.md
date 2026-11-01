@@ -87,7 +87,7 @@ player. They are derived from 礦藝大典 and remain **CC BY-NC-SA 3.0**; do no
 commit them to this repository unless you are complying with that license.
 The script itself is GPL-3.0-only.
 
-## What the two tools produce
+## What the tools produce
 
 ```bash
 # English, fonts, shaders, textures, Unifont, credits music
@@ -104,6 +104,28 @@ textures, Unifont and the credits music.
 It does **not** produce `end_poem_zh.txt`. I do not have a NetEase jar or a
 verified NetEase layout, so this repository makes no NetEase extraction
 assumption; supply a licensed Chinese text file yourself if you have one.
+
+## Importing Bedrock / APK `credits/end.txt`
+
+`tools/import_end_text.py` copies a Bedrock text file without guessing its
+language. You choose the destination name:
+
+```bash
+# Windows Bedrock file
+python3 tools/import_end_text.py \
+  "C:\FeverApps\MCBedrock\data\credits\end.txt" \
+  --output end_poem_zh.txt
+
+# Android APK; assets/assets/credits/end.txt is the default entry
+python3 tools/import_end_text.py Minecraft.apk \
+  --output end_poem_zh.txt
+```
+
+The importer reports the line count and the first/last non-empty line so you
+can verify what the file actually is. It does not assume that a Bedrock file is
+Chinese, English or aligned with Java's end.txt. Bedrock/Mojang text is not
+covered by this repository's licenses; keep imported files local and do not
+commit them.
 
 ## Build
 
