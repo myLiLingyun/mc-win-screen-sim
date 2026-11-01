@@ -7,7 +7,7 @@ mkdir -p dist
 cp EndPoem.jar dist/
 cp -r lib natives assets assets-placeholder tools dist/
 rm -rf dist/tools/__pycache__
-cp run.sh run.bat NOTICE.md LICENSE LICENSE.CC-BY-NC-SA-4.0 THIRD-PARTY.md dist/
+cp run.sh run.bat dist/
 find dist -name README.md -delete
 chmod 755 dist/run.sh
 rm -f EndPoem-26.2-dist.zip
