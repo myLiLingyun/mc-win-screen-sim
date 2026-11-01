@@ -4,3 +4,5 @@ EndPoem.jar
 dist/
 *.zip
 *.log
+
+__pycache__/

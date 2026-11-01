@@ -13,10 +13,10 @@ Usage:
     python3 tools/extract_minecraft_assets.py 26.2-Fabric.jar \\
         --minecraft-dir ~/.minecraft --index 32
 
-This tool extracts only the files the player uses. It does not include the
-English text's translation files; use fetch_wiki_translations.py for the four
-Classical Chinese texts, and supply the NetEase Chinese text yourself if you
-have the right to use it.
+This tool extracts only the files the player uses. The optional --zh-jar
+copies a NetEase Chinese text entry from another jar; the NetEase text remains
+subject to NetEase's rights and is for local use only. Use
+fetch_wiki_translations.py for the four CC BY-NC-SA Classical Chinese texts.
 """
 
 from __future__ import annotations
@@ -141,6 +141,29 @@ def extract_external(minecraft_dir: Path, index: Path, out: Path) -> set[str]:
     return missing
 
 
+def extract_chinese(jar: Path, entry: str, out: Path) -> None:
+    if not jar.is_file() or not zipfile.is_zipfile(jar):
+        raise SystemExit(f"not a readable jar: {jar}")
+    with zipfile.ZipFile(jar) as zf:
+        if entry not in zf.namelist():
+            raise SystemExit(f"{jar}: entry not found: {entry}")
+        data = zf.read(entry)
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        try:
+            text = data.decode("gb18030")
+            print("note: NetEase text was GB18030; converting to UTF-8")
+        except UnicodeDecodeError as exc:
+            raise SystemExit(f"{jar}: Chinese text is neither UTF-8 nor GB18030: {exc}")
+    if len(text.splitlines()) != 151:
+        print(f"warning: Chinese text has {len(text.splitlines())} lines, expected 151")
+    destination = out / "end_poem_zh.txt"
+    write_bytes(destination, text.encode("utf-8"))
+    print("warning: the optional NetEase Chinese text is not covered by this")
+    print("repository's licenses; keep it for local use only and do not commit it.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("jar", type=Path, help="Minecraft client jar")
@@ -151,6 +174,10 @@ def main() -> None:
     parser.add_argument("--index", help="asset index name or path (default: auto)")
     parser.add_argument("--no-external", action="store_true",
                         help="do not look for Unifont/music in the asset-object store")
+    parser.add_argument("--zh-jar", type=Path,
+                        help="optional NetEase client jar containing a Chinese end.txt")
+    parser.add_argument("--zh-entry", default="assets/minecraft/texts/end.txt",
+                        help="Chinese text entry inside --zh-jar")
     args = parser.parse_args()
 
     if not args.jar.is_file():
@@ -161,6 +188,9 @@ def main() -> None:
     print(f"jar: {args.jar}")
     print(f"out: {args.out.resolve()}")
     missing = extract_jar(args.jar, args.out)
+
+    if args.zh_jar:
+        extract_chinese(args.zh_jar, args.zh_entry, args.out)
 
     if not args.no_external:
         index = locate_index(args.minecraft_dir, args.index)
