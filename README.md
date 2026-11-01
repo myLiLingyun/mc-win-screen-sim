@@ -67,6 +67,25 @@ third-party translation assets to this repository.
 
 The exact file layout and metric behavior are documented in `assets/README.md`.
 
+## Regenerating the four Classical Chinese translations
+
+`tools/fetch_wiki_translations.py` downloads the four translation pages with
+`curl`, extracts only the translation half of each English/translation pair,
+aligns the 76 text lines to the 151-line English file, converts placeholders,
+and writes directly into an assets directory:
+
+```bash
+python3 tools/fetch_wiki_translations.py --out assets
+# or:
+python3 tools/fetch_wiki_translations.py \
+  --english /path/to/assets/end_poem_en.txt --out /path/to/assets
+```
+
+The four output files are byte-identical to the versions used by the full
+player. They are derived from 礦藝大典 and remain **CC BY-NC-SA 3.0**; do not
+commit them to this repository unless you are complying with that license.
+The script itself is GPL-3.0-only.
+
 ## Build
 
 ```bash
@@ -100,7 +119,7 @@ affiliated with Mojang, Microsoft or NetEase.
 
 | Content | License |
 |---|---|
-| Source code (`src/`, build scripts) | GPL-3.0-only |
+| Source code (`src/`, `tools/`, build scripts) | GPL-3.0-only |
 | README, NOTICE, documentation, screenshots | CC BY-NC-SA 4.0 |
 | English End Poem text | public domain |
 | Generated placeholder assets | GPL-3.0-only |
