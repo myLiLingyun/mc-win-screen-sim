@@ -3,7 +3,8 @@
 """Import a Bedrock/APK credits/end.txt as an assets text file.
 
 The tool deliberately does not decide whether the source is English, Chinese
-or another language. Pass --output to choose the destination name.
+or another language. Pass --output to choose the destination name. The source
+line endings are preserved; only a BOM/encoding conversion may change bytes.
 
 Examples:
     # Windows Bedrock
@@ -74,7 +75,6 @@ def main() -> None:
 
     data, source = read_input(args.input, args.entry)
     text, encoding = decode(data, args.encoding)
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
     lines = text.splitlines()
     nonempty = [line for line in lines if line.strip()]
     if not nonempty:
@@ -82,7 +82,7 @@ def main() -> None:
 
     destination = args.out / args.output
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    destination.write_bytes(text.encode("utf-8"))
 
     print(f"source: {args.input} ({source})")
     print(f"decoded as: {encoding}")
