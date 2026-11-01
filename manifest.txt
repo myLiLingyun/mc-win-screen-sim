@@ -1,0 +1,2 @@
+Main-Class: com.endpoem.Main
+Class-Path: lib/lwjgl-3.4.1.jar lib/lwjgl-glfw-3.4.1.jar lib/lwjgl-opengl-3.4.1.jar lib/lwjgl-stb-3.4.1.jar lib/gson-2.14.0.jar

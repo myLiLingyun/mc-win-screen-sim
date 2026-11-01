@@ -1,0 +1,6 @@
+out/
+sources.txt
+EndPoem.jar
+dist/
+*.zip
+*.log
