@@ -12,8 +12,9 @@ Usage:
     python3 tools/fetch_wiki_translations.py --english /path/end_poem_en.txt
 
 Only Python's standard library and `curl` are required. The output files are
-151 lines, aligned with the English end.txt; placeholders are converted to the
-same PLAYERNAME / §f§k§a§b forms used by the player.
+151 lines, aligned with the English end.txt; the player-name placeholder is
+converted to PLAYERNAME, while the wiki's scrambled-text markers such as
+[不可讀] are intentionally kept as literal text.
 """
 
 from __future__ import annotations
@@ -39,7 +40,6 @@ TRANSLATIONS = [
 PATH_PREFIX = "/w/終末之詩/文/譯文/"
 OBFUSCATE = "\u00a7f\u00a7k\u00a7a\u00a7b"
 NAME_PLACEHOLDERS = ("[名姓]", "[戲者之名]", "[戲者名]", "[Playername]")
-SCRAMBLED_PLACEHOLDERS = ("[不可讀]", "[不可辨]", "[奇文異字]", "[亂碼]", "[scrambled]")
 
 
 class PoemSpanParser(HTMLParser):
@@ -155,12 +155,6 @@ def convert(english: Path, out_dir: Path) -> None:
                 text = chinese_line
                 for placeholder in NAME_PLACEHOLDERS:
                     text = text.replace(placeholder, "PLAYERNAME")
-                for placeholder in SCRAMBLED_PLACEHOLDERS:
-                    text = text.replace(placeholder, OBFUSCATE)
-                # A §f§k§a§b token changes the colour to white. Restore the
-                # line's original colour after every token, as end.txt does.
-                if prefix:
-                    text = text.replace(OBFUSCATE, OBFUSCATE + prefix)
                 output[source_index] = prefix + text
 
             destination = out_dir / filename

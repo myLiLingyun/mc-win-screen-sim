@@ -71,8 +71,9 @@ The exact file layout and metric behavior are documented in `assets/README.md`.
 
 `tools/fetch_wiki_translations.py` downloads the four translation pages with
 `curl`, extracts only the translation half of each English/translation pair,
-aligns the 76 text lines to the 151-line English file, converts placeholders,
-and writes directly into an assets directory:
+aligns the 76 text lines to the 151-line English file, converts the
+player-name placeholder only, keeps the wiki's scrambled-text markers (such as
+`[不可讀]`) as literal text, and writes directly into an assets directory:
 
 ```bash
 python3 tools/fetch_wiki_translations.py --out assets
