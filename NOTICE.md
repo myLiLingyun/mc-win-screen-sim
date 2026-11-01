@@ -7,10 +7,10 @@ Microsoft or NetEase.
 
 - `assets/end_poem_en.txt` — English text of the End Poem, public domain.
 - `assets-placeholder/` — generated placeholder textures, GLSL shaders and an
-  ASCII bitmap font, created for this project and licensed GPL-3.0.
+  ASCII bitmap font, created for this project and licensed GPL-3.0-only.
   The placeholder bitmap font was generated with Pillow using the CC0 Aileron
   font; no font software is redistributed.
-- `src/` — GPL-3.0 code.
+- `src/` — GPL-3.0-only code.
 - `docs/` and this file — CC BY-NC-SA 4.0 documentation.
 
 ## Not bundled

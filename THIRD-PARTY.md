@@ -1,6 +1,6 @@
 # Third-party components
 
-This project's own code is GPL-3.0. The following third-party components are
+This project's own code is GPL-3.0-only. The following third-party components are
 included as separate libraries/binaries and remain under their own licenses.
 
 ## LWJGL 3.4.1
